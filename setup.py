@@ -13,11 +13,11 @@ setup(
     long_description = read('README.rst'),
     author = 'Marc Fargas',
     author_email = 'telenieko@telenieko.com',
-    packages = find_packages('src'),
+    packages = find_packages('src', exclude=('mailserver.testapp*', )),
     package_dir = {'': 'src'},
     install_requires = ['setuptools'],
     classifiers = [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 2 - Pre-Alpha',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',

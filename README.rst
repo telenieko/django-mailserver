@@ -13,7 +13,7 @@ seemed far much more like a fork than improvement.
 NOTE: that this is really alpha software, don't use it in a production
 environment unless you expect it to break everything ;)
 
-.. _django-smtpd:: http://code.google.com/p/django-smtpd/
+.. _django-smtpd: http://code.google.com/p/django-smtpd/
 
 Example usage:
 ==============
