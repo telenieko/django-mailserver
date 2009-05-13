@@ -10,7 +10,7 @@ setup(
     url = 'http://github.com/telenieko/django-mailserver',
     license = 'BSD',
     description = "Create mail services in Django.",
-    long_description = read('README.rst'),
+    long_description = read('README'),
     author = 'Marc Fargas',
     author_email = 'telenieko@telenieko.com',
     packages = find_packages('src', exclude=('mailserver.testapp*', )),
