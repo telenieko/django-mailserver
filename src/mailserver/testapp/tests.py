@@ -1,9 +1,11 @@
 import unittest
 import os, sys
+
 from email import message_from_string
 from django.test import TestCase
 from mailserver import *
 from mailserver.handlers import BaseMessageHandler
+from django.template import TemplateDoesNotExist
 
 MAIL = """From marc@telenieko.com Wed Oct 22 07:16:19 2008
 Return-path: <marc@telenieko.com>
@@ -27,8 +29,10 @@ class TestResolver(TestCase):
         self.message.replace_header('Envelope-To', 'johndoe@example.org')
         em = EmailRequest(message=self.message)
         handler = BaseMessageHandler()
-        res = handler(os.environ, em)
-        assert isinstance(res, EmailResponseNotFound)
+        try:
+            res = handler(os.environ, em)
+        except TemplateDoesNotExist, e:
+            self.assertEquals(e.message, 'recipient_notfound.txt')
 
     def handle_for(self, to):
         self.message.replace_header('Envelope-To', to)

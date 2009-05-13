@@ -73,7 +73,7 @@ class BaseMessageHandler(object):
             raise
 
         # When DEBUG is False, send an error message to the admins.
-        subject = 'Mail Error (%s)' % (request['From'])
+        subject = 'Mail Error (%s)' % request['From'][1]
         try:
             request_repr = repr(request)
         except:
