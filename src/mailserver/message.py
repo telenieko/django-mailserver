@@ -31,12 +31,12 @@ class EmailRequest(object):
 
     def __getitem__(self, key):
         lkey = key.lower()
+        if not self.message.has_key(key):
+            raise AttributeError, "%s has no such key %s" % (repr(self), key)
         if lkey in ['from', 'to', 'bcc', 'cc', 'envelope-to']:
             adrs = self.get_addresslist(lkey)
             if lkey == 'from': return adrs[0]
             return adrs
-        if not self.message.has_key(key):
-            raise AttributeError, "%s has no such key %s" % (repr(self), key)
         return self.message[key]
 
     def get_addresslist(self, field):
