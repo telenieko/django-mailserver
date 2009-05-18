@@ -1,7 +1,7 @@
 import email, re
 from email import message_from_string
 from string import join
-from rfc822 import AddressList
+from rfc822 import AddressList, parseaddr
 from django.conf import settings
 from django.core.files import uploadhandler
 from django.utils.datastructures import MultiValueDict
@@ -33,10 +33,11 @@ class EmailRequest(object):
         lkey = key.lower()
         if not self.message.has_key(key):
             raise AttributeError, "%s has no such key %s" % (repr(self), key)
-        if lkey in ['from', 'to', 'bcc', 'cc', 'envelope-to']:
+        if lkey in ['to', 'bcc', 'cc']:
             adrs = self.get_addresslist(lkey)
-            if lkey == 'from': return adrs[0]
             return adrs
+        elif lkey in ['from', 'envelope-to']:
+            return parseaddr(self.message[lkey])
         return self.message[key]
 
     def get_addresslist(self, field):
@@ -62,9 +63,7 @@ class EmailRequest(object):
         """
         # Best of all is "Envelope-To" which gets added by MTA on delivery.
         envelope = self['Envelope-To']
-        if len(envelope) == 1:
-            return envelope[0]
-        raise ValueError, "Could not get recipient for %s" % self
+        return envelope
     
     def get_recipient_address(self):
         return self.get_recipient()[1]
