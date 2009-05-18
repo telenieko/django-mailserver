@@ -39,4 +39,3 @@ i18n = context_processors.i18n
 media = context_processors.media
 request= context_processors.request
 
-

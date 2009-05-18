@@ -8,12 +8,16 @@ DEFAULT_SETTINGS = {
     'ROOT_MAILCONF': 'mailbox',
     'MAIL_TEMPLATE_CONTEXT_PROCESSORS': (
         'mailserver.context.request',
+        'django.core.context_processors.auth',
         'mailserver.context.media',
         'mailserver.context.i18n',
         ),
     'MAIL_MIDDLEWARE': (
         'django.middleware.transaction.TransactionMiddleware',
-
+        'mailserver.auth.AuthenticationMiddleware',
+    ),
+    'MAIL_AUTHENTICATION_BACKENDS': (
+        'mailserver.auth.MailFromBackend',
     ),
 }
   

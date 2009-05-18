@@ -3,6 +3,8 @@ import os, sys
 
 from email import message_from_string
 from django.test import TestCase
+from django.template import TemplateDoesNotExist
+from django.contrib.auth.models import User, AnonymousUser
 from mailserver import *
 from mailserver.handlers import BaseMessageHandler
 from mailserver.test import Client
@@ -66,3 +68,25 @@ class TestRequest(TestCase):
         context = RequestContext(request)
         assert context['request'] == request
 
+class TestAuthentication(TestCase):
+    def setUp(self):
+        self.message = message_from_string(MAIL)
+        self.user = User.objects.create_user('Bob', 'bob@example.com', '123')
+        self.client = Client()
+
+    def test_anonymous(self):
+        request = EmailRequest(message=self.message)
+        response = self.client.request(request)
+        user = response.context['user']
+        self.assertEquals(True, user.is_anonymous())
+        
+    def test_registered(self):
+        self.message.replace_header('From', 'bob@example.com')
+        request = EmailRequest(message=self.message)
+        response = self.client.request(request)
+        user = response.context['user']
+        self.assertEquals(False, user.is_anonymous())
+        self.assertEquals(user, self.user)
+        
+        
+        
