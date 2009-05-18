@@ -1,7 +1,6 @@
 from mailserver import resolvers
 from mailserver.exceptions import *
-from mailserver import EmailResponse, EmailResponseServer
-from mailserver import EmailIgnoreResponse
+from mailserver import EmailResponse, EmailIgnoreResponse
 from threading import Lock
 import logging
 import sys
@@ -13,7 +12,6 @@ class BaseMessageHandler(object):
         self._request_middleware = self._view_middleware = self._response_middleware = self._exception_middleware = None
 
     def __call__(self, environ, request):
-        logging.debug("processing message %s" % request)
         if self._request_middleware is None:
             self.initLock.acquire()
             if self._request_middleware is None:
@@ -22,15 +20,12 @@ class BaseMessageHandler(object):
         resp = self.get_response(request)
         # Need to handle when the reply is to be sent
         # Or needs to not mark-as-delivered
-        if isinstance(resp, EmailResponseServer):
-            # Some king of error we have to tell the MTA about.
-            # (User gets nothing (from our part))
-            return resp
-        elif isinstance(resp, EmailIgnoreResponse):
+        if isinstance(resp, EmailIgnoreResponse):
             pass
         elif isinstance(resp, EmailResponse):
             # Some kind of normal response, we send to the user.
             resp.send()
+            resp = EmailIgnoreResponse()
         else:
             raise ValueError, "Do not know how to handle response %s" % resp
         return resp
@@ -125,15 +120,17 @@ class BaseMessageHandler(object):
         except resolvers.Resolver404, e:
             try:
                 callback, param_dict = resolver.resolve404()
-                return callback(request, **param_dict)
-            except:
-                return self.handle_uncaught_exception(
-                    request, resolver, sys.exc_info())
+                callback(request, **param_dict)
+            except RecipientNotFound:
+                raise
+            self.handle_uncaught_exception(
+                request, resolver, sys.exc_info())
         except SystemExit:
             raise
         except:
             exc_info = sys.exc_info()
-            return self.handle_uncaught_exception(request, resolver, exc_info)
+            self.handle_uncaught_exception(request, resolver, exc_info)
+            raise
             
     def handle_uncaught_exception(self, request, resolver, exc_info):
         from django.conf import settings
@@ -150,9 +147,6 @@ class BaseMessageHandler(object):
             request_repr = "Request repr() unavailable"
         message = "%s\n\n%s" % (self._get_traceback(exc_info), request_repr)
         mail_admins(subject, message, fail_silently=True)
-        # Return an HttpResponse that displays a friendly error message.
-        callback, param_dict = resolver.resolve500()
-        return callback(request, **param_dict)
 
     def _get_traceback(self, exc_info=None):
         "Helper function to return the traceback as a string"

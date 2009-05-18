@@ -8,10 +8,11 @@ from django.contrib.auth.models import User, AnonymousUser
 from mailserver import *
 from mailserver.handlers import BaseMessageHandler
 from mailserver.test import Client
+from mailserver.exceptions import *
 
 MAIL = """From jerry@example.com Wed Oct 22 07:16:19 2008
 Return-path: <tom@example.com>
-Envelope-to: doesnotexist@example.com
+Envelope-to: onedest@example.net
 Delivery-date: Wed, 22 Oct 2008 10:07:38 -0400
 Message-ID: <fab82e500810220403n6d294b91g5ab3963a7fcff7cf@mail.gmail.com>
 Date: Wed, 22 Oct 2008 13:03:36 +0200
@@ -31,25 +32,23 @@ class TestResolver(TestCase):
     def test_404(self):
         self.message.replace_header('Envelope-To', 'johndoe@example.org')
         em = EmailRequest(message=self.message)
-        response = self.client.request(em)
-        self.assertEquals(response.template.name, 'recipient_notfound.txt')
+        try:
+            response = self.client.request(em)
+        except RecipientNotFound, e:
+            self.assertEquals(e.status_code, 551)
 
-    def handle_for(self, to):
+    def request_one(self, to):
         self.message.replace_header('Envelope-To', to)
         em = EmailRequest(message=self.message)
-        handler = BaseMessageHandler()
-        return handler(os.environ, em)
+        response = self.client.request(em)
+        return response
 
-    def test_includes(self):
-        res = self.handle_for('somebody@example.net')
-        self.assertEquals(res.sender, 'somebody')
-        self.assertEquals(res.domain, '')
-        res = self.handle_for('somebody@myapp.example.net')
-        self.assertEquals(res.sender, 'somebody')
-        self.assertEquals(res.domain, 'myapp')
-        res = self.handle_for('somebody@myapp.example.net')
-        self.assertEquals(res.sender, 'somebody')
-        self.assertEquals(res.domain, 'myapp')
+    def test_ok(self):
+        response = self.request_one('manolo@bugs.example.com')
+        self.assertEquals(response.context['request']['Envelope-To'][1], 'manolo@bugs.example.com')
+        self.assertEquals(response.context['sender'], 'manolo')
+        
+
 
 class TestHandler(TestCase):
     def setUp(self):
@@ -76,14 +75,20 @@ class TestAuthentication(TestCase):
 
     def test_anonymous(self):
         request = EmailRequest(message=self.message)
-        response = self.client.request(request)
+        try:
+            response = self.client.request(request)
+        except RecipientNotFound:
+            pass
         user = response.context['user']
         self.assertEquals(True, user.is_anonymous())
         
     def test_registered(self):
         self.message.replace_header('From', 'bob@example.com')
         request = EmailRequest(message=self.message)
-        response = self.client.request(request)
+        try:
+            response = self.client.request(request)
+        except RecipientNotFound:
+            pass
         user = response.context['user']
         self.assertEquals(False, user.is_anonymous())
         self.assertEquals(user, self.user)

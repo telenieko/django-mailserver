@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.files import uploadhandler
 from django.utils.datastructures import MultiValueDict
 from django.core.mail import EmailMessage
+from mailserver.exceptions import *
 
 
 class EmailRequest(object):
@@ -188,14 +189,4 @@ class EmailResponse(EmailMessage):
 class EmailIgnoreResponse(EmailResponse):
     """ Use this to not send any mails and do not say anything
         to the MTAs. """
-
-
-class EmailResponseServer(EmailResponse):
-    """ Use this for responses that should be given back
-        to MTA's (i.e. Recipient Not Found). """
-    pass
-
-
-class EmailResponseNotFound(EmailResponseServer):
-    status_code = 551
 
