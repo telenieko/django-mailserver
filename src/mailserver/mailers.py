@@ -1,5 +1,5 @@
 from mailserver import EmailResponse, EmailResponseNotFound
-from mailserver import get_mdaemon
+from mailserver import get_setting
 from django.template import Context, RequestContext, loader
 from django.utils.safestring import mark_safe
 
@@ -12,7 +12,7 @@ def page_not_found(request, template_name='recipient_notfound.txt', subject=None
             {'recipient': mark_safe(request.get_recipient_display())}
         ))
     response = EmailResponseNotFound(
-        from_email=get_mdaemon(),
+        from_email=get_setting('MAIL_DAEMON_ADDRESS'),
         to=request['From'],
         body=plain_body, subject=subject)
     return response

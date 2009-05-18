@@ -1,13 +1,14 @@
 from message import *
-
+import exceptions
 import resolvers
 import handlers
 
+DEFAULT_SETTINGS = {
+    'MAIL_DAEMON_ADDRESS': 'daemon@example.com',
+    'ROOT_MAILCONF': 'mailbox',
+}
   
-def get_mdaemon():
+def get_setting(setting):
     from django.conf import settings
-    mdaemon = None
-    try:
-        mdaemon = settings.MAILER_DAEMON_ADDRESS
-    except AttributeError:
-        return mdaemon or 'daemon@example.com'
+    default = DEFAULT_SETTINGS[setting]
+    return getattr(settings, setting, default)

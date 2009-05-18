@@ -29,8 +29,8 @@ class BaseMessageHandler(object):
 
     def get_response(self, request):
         from django.core import exceptions
-        from django.conf import settings
-        mailconf = getattr(request, "mailconf", settings.ROOT_MAILCONF)
+        from mailserver import get_setting
+        mailconf = getattr(request, "mailconf", get_setting('ROOT_MAILCONF'))
         resolver = resolvers.RegexMailResolver(r'', mailconf)
         try:
             callback, callback_args, callback_kwargs = \

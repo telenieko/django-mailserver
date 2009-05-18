@@ -11,8 +11,8 @@ _resolver_cache = {} # Maps mailconf modules to RegexURLResolver instances.
 
 def get_resolver(mailconf):
     if mailconf is None:
-        from django.conf import settings
-        mailconf = settings.ROOT_EMAILCONF
+        from mailserver import get_setting
+        mailconf = get_setting('ROOT_MAILCONF')
     return RegexMailResolver(r'', mailconf)
 get_resolver = memoize(get_resolver, _resolver_cache, 1)
 
