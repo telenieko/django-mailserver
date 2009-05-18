@@ -5,16 +5,16 @@ from email import message_from_string
 from django.test import TestCase
 from mailserver import *
 from mailserver.handlers import BaseMessageHandler
-from django.template import TemplateDoesNotExist
+from mailserver.test import Client
 
-MAIL = """From marc@telenieko.com Wed Oct 22 07:16:19 2008
-Return-path: <marc@telenieko.com>
-Envelope-to: pybts@bugs.example.com
+MAIL = """From jerry@example.com Wed Oct 22 07:16:19 2008
+Return-path: <tom@example.com>
+Envelope-to: doesnotexist@example.com
 Delivery-date: Wed, 22 Oct 2008 10:07:38 -0400
 Message-ID: <fab82e500810220403n6d294b91g5ab3963a7fcff7cf@mail.gmail.com>
 Date: Wed, 22 Oct 2008 13:03:36 +0200
-From: "Marc Fargas Esteve" <marc@telenieko.com>
-To: submit@bugs.example.com
+From: "John Smith" <john@example.com>
+To: destination@bugs.example.com
 Subject: Prueba GMail plain
 
 Prueba desde GMail en texto llano.
@@ -24,15 +24,13 @@ Prueba desde GMail en texto llano.
 class TestResolver(TestCase):
     def setUp(self):
         self.message = message_from_string(MAIL)
+        self.client = Client()
 
     def test_404(self):
         self.message.replace_header('Envelope-To', 'johndoe@example.org')
         em = EmailRequest(message=self.message)
-        handler = BaseMessageHandler()
-        try:
-            res = handler(os.environ, em)
-        except TemplateDoesNotExist, e:
-            self.assertEquals(e.message, 'recipient_notfound.txt')
+        response = self.client.request(em)
+        self.assertEquals(response.template.name, 'recipient_notfound.txt')
 
     def handle_for(self, to):
         self.message.replace_header('Envelope-To', to)
