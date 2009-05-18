@@ -11,6 +11,10 @@ DEFAULT_SETTINGS = {
         'mailserver.context.media',
         'mailserver.context.i18n',
         ),
+    'MAIL_MIDDLEWARE': (
+        'django.middleware.transaction.TransactionMiddleware',
+
+    ),
 }
   
 def get_setting(setting):
