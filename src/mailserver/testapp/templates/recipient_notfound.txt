@@ -1,0 +1,4 @@
+The requested mailbox {{ recipient }} was not found
+on this server.
+
+Please, check your addressbook.
