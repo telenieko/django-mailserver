@@ -4,6 +4,7 @@ import os
 import sys 
 from mailserver.message import EmailRequest
 from mailserver.handlers import BaseMessageHandler
+from mailserver.exceptions import *
 from django.utils import translation
 
 class Command(BaseCommand):
@@ -23,5 +24,9 @@ class Command(BaseCommand):
         quit_command = (sys.platform == 'win32') and 'CTRL-BREAK' or 'CONTROL-C' 
         message = EmailRequest.from_message_data(f.read())
         handler = BaseMessageHandler()
-        res = handler(os.environ, message)
-        print res
+        try:
+            handler(os.environ, message)
+        except DeliveryError, e:
+            print e.message
+            sys.exit(e.status_code)
+
