@@ -54,4 +54,17 @@ class TestResolver(TestCase):
 class TestHandler(TestCase):
     def setUp(self):
         self.message = message_from_string(MAIL)
-    
+
+
+class TestRequest(TestCase):
+    def setUp(self):
+        self.message = message_from_string(MAIL)
+
+    def test_requestcontext(self):
+        from mailserver.context import RequestContext
+        current_processors = get_setting('MAIL_TEMPLATE_CONTEXT_PROCESSORS')
+        assert 'mailserver.context.request' in current_processors
+        request = EmailRequest(message=self.message)
+        context = RequestContext(request)
+        assert context['request'] == request
+

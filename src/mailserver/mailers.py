@@ -1,6 +1,7 @@
 from mailserver import EmailResponse, EmailResponseNotFound
 from mailserver import get_setting
-from django.template import Context, RequestContext, loader
+from mailserver.context import RequestContext
+from django.template import loader
 from django.utils.safestring import mark_safe
 
 def page_not_found(request, template_name='recipient_notfound.txt', subject=None):

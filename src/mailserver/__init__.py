@@ -6,6 +6,11 @@ import handlers
 DEFAULT_SETTINGS = {
     'MAIL_DAEMON_ADDRESS': 'daemon@example.com',
     'ROOT_MAILCONF': 'mailbox',
+    'MAIL_TEMPLATE_CONTEXT_PROCESSORS': (
+        'mailserver.context.request',
+        'mailserver.context.media',
+        'mailserver.context.i18n',
+        ),
 }
   
 def get_setting(setting):
