@@ -15,10 +15,13 @@ class EmailRequest(object):
     FILES = None
     META = None
 
-    def __init__(self, message):
+    def __init__(self, message, recipient=None):
         self.message = message
         self._encoding = settings.DEFAULT_CHARSET
         self._addresses = {}
+        if recipient is None:
+            recipient = self.message['Envelope-To']
+        self.recipient = recipient
         self.FILES = MultiValueDict()
         self.META = MultiValueDict()
         self.parse_file_upload()
@@ -27,8 +30,8 @@ class EmailRequest(object):
         attached = ["\n\tAttachment: %s" % \
             file.name for k, file in self.FILES.iteritems()]
         attached = join(attached, '')
-        return u"<EmailRequest\n\tFrom: %s\n\tTo: %s%s\nBody:\n%s>" % \
-            (self['From'], self.get_recipient(), attached, self.get_body())
+        return u"<EmailRequest\n\tFrom: %s\n\tTo: %s%s>" % \
+            (self['From'], self.get_recipient(), attached)
 
     def __getitem__(self, key):
         lkey = key.lower()
@@ -52,29 +55,15 @@ class EmailRequest(object):
         return self._addresses[field]
 
     def get_recipient(self):
-        """ TODO: Think more about it, it's likely we could end up
-            processing the same message either more than once,
-            or skipping recipients. Examples:
-                * Using an Exim pipe transport matching a subdomain,
-                  if we have multiple To, CC or Bcc to us, the message
-                  gets delivered only once unless exim is told otherwise.
-                * We could get one copy for each To, CC and Bcc address to
-                  us, and we could end up processing the message all those
-                  times.
-        """
-        # Best of all is "Envelope-To" which gets added by MTA on delivery.
-        envelope = self['Envelope-To']
+        envelope = parseaddr(self.recipient)
         return envelope
     
     def get_recipient_address(self):
         return self.get_recipient()[1]
 
     def get_recipient_display(self):
-        rec = self.get_recipient()
-        realname = u''
-        if rec[0] != '':
-            realname = u"%s " % rec[0]
-        return u"%s<%s>" % (realname, rec[1])
+        rec = self.recipient
+        return rec
 
     def get_body(self):
         """ Get the body of a Message, it can either be:
@@ -176,9 +165,11 @@ class EmailRequest(object):
         # self.message
 
     @classmethod
-    def from_message_data(cls, message):
+    def from_message_data(cls, message, recipient=None):
         msg = message_from_string(message)
-        email = cls(msg)
+        if not recipient:
+            recipient = msg['Envelope-To']
+        email = cls(msg, recipient)
         return email
 
 
