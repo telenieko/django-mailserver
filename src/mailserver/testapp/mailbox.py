@@ -20,11 +20,3 @@ urlpatterns = patterns('',
   (r'@bugs.example.com', include('testapp2.mailbox')),
 )
 
-def echo(request, sender, domain=None):
-    print 'received sender=%s domain=%s' % (sender, domain)
-    resp = EmailResponseServer(from_email=request.get_recipient_display(),
-        to=request['From'], body=sender,
-        subject="Echo Echo")
-    resp.sender = sender
-    resp.domain = domain
-    return resp
