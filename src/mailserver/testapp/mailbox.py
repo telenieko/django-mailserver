@@ -9,7 +9,7 @@ sys.modules.setdefault('testapp2', testapp)
 sys.modules.setdefault('testapp2.mailbox', testappboxes)
 
 testpatterns = patterns('',
-  (r'^onedest', 'testapp.mailers.reply'),
+  (r'^onedest', 'testapp.mailers.echo'),
   (r'(?P<sender>.+)@(?P<domain>.*)', 'testapp.mailers.echo'),
   (r'(?P<sender>.+)', 'testapp.mailers.echo'),
   )

@@ -1,17 +1,16 @@
-from mailserver import EmailResponse, EmailIgnoreResponse, EmailResponseServer
+from mailserver import EmailResponse
+from django.template import loader
+from django.utils.safestring import mark_safe
+from mailserver.context import RequestContext
 
-def echo(request, sender, domain=None):
-    print 'received sender=%s domain=%s' % (sender, domain)
-    resp = EmailResponseServer(from_email=request.get_recipient_display(),
-        to=request['From'], body=sender,
+def echo(request, sender=None, domain=None):
+    t = loader.get_template('recipient_notfound.txt')
+    plain_body = t.render(
+        RequestContext(request, {'sender': sender, 'domain': domain})
+        )
+    resp = EmailResponse(
+        from_email=request.get_recipient_display(),
+        to=request['From'], body=plain_body,
         subject="Echo Echo")
-    resp.sender = sender
-    resp.domain = domain
     return resp
 
-def reply(request):
-    print "Got email %s, mirror-reply!" % request
-    return EmailResponse(from_email=request.get_recipient_display(),
-            to=request['From'],
-            body=request.get_body(),
-            subject="Re: %s" % request['Subject'])
