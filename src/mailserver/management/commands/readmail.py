@@ -11,8 +11,6 @@ class Command(BaseCommand):
     help = 'Reads an e-mail from STDIN for handling.'
     args = '[optional file name]'
 
-    requires_model_validation = False
-
     def handle(self, filename=None, *args, **options):
         if args:
             raise CommandErrors('Usage is runmailserver %s' % self.args)
@@ -20,8 +18,6 @@ class Command(BaseCommand):
             f = open(filename, 'r')
         else:
             f = sys.stdin
-        shutdown_message = options.get('shutdown_message', '') 
-        quit_command = (sys.platform == 'win32') and 'CTRL-BREAK' or 'CONTROL-C' 
         message = EmailRequest.from_message_data(f.read())
         handler = BaseMessageHandler()
         try:
