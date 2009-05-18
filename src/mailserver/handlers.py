@@ -33,7 +33,7 @@ class BaseMessageHandler(object):
             resp.send()
         else:
             raise ValueError, "Do not know how to handle response %s" % resp
-        return None
+        return resp
       
     def __repr__(self):
         return self.__class__.__name__
