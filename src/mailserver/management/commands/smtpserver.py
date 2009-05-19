@@ -15,14 +15,7 @@ class SMTPServer(smtpd.SMTPServer):
         smtpd.SMTPServer.__init__(self, *args, **kwargs)
         self.handler = BaseMessageHandler()
 
-    def process_message(self, *args, **kwargs):
-        try:
-            self.real_process_message(*args, **kwargs)
-        except DeliveryError, e:
-            return u"%s %s" % (e.status_code, e.message)
-
-    @commit_on_success
-    def real_process_message(self, peer, mailfrom, rcpttos, data):
+    def process_message(self, peer, mailfrom, rcpttos, data):
         for recipient in rcpttos:
             message = EmailRequest.from_message_data(data, recipient)
             response = self.handler(os.environ, message)

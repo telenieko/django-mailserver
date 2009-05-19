@@ -25,7 +25,6 @@ class BaseMessageHandler(object):
         elif isinstance(resp, EmailResponse):
             # Some kind of normal response, we send to the user.
             resp.send()
-            resp = EmailIgnoreResponse()
         else:
             raise ValueError, "Do not know how to handle response %s" % resp
         return resp
@@ -114,23 +113,17 @@ class BaseMessageHandler(object):
                     view_name = callback.__class__.__name__ + '.__call__'
                 raise ValueError, "The view %s.%s didn't return a meaningfull response" % (callback.__module__, view_name)
             return response
-        except exceptions.PermissionDenied:
-            # How should we handle this?
-            raise
-        except resolvers.Resolver404, e:
-            try:
-                callback, param_dict = resolver.resolve404()
-                callback(request, **param_dict)
-            except RecipientNotFound:
-                raise
-            self.handle_uncaught_exception(
-                request, resolver, sys.exc_info())
         except SystemExit:
             raise
         except:
             exc_info = sys.exc_info()
+            exc = exc_info[1]
+            if hasattr(exc, 'get_response'):
+                response = exc.get_response(request)
+                if response is not None:
+                    return response
             self.handle_uncaught_exception(request, resolver, exc_info)
-            raise
+        return response
             
     def handle_uncaught_exception(self, request, resolver, exc_info):
         from django.conf import settings

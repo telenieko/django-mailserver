@@ -1,11 +1,9 @@
 import re
 from django.utils.functional import memoize
 from django.utils.datastructures import MultiValueDict
-from mailserver.exceptions import RecipientNotFound, MailerDoesNotExist
+from mailserver.exceptions import RecipientNotFound
 from django.core import urlresolvers
 from django.utils.encoding import smart_str
-
-Resolver404 = urlresolvers.Resolver404
 
 _resolver_cache = {} # Maps mailconf modules to RegexURLResolver instances.
 
@@ -42,7 +40,7 @@ class RegexMailResolver(urlresolvers.RegexURLResolver):
                             sub_match_dict[smart_str(k)] = v
                         return sub_match[0], sub_match[1], sub_match_dict
                     tried.append(pattern.regex.pattern)
-            raise Resolver404, {'tried': tried, 'path': new_path}
+            raise RecipientNotFound, {'tried': tried, 'path': new_path}
 
 
 def resolve(path, mailconf=None):

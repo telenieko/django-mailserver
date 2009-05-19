@@ -6,7 +6,6 @@ from django.conf import settings
 from django.core.files import uploadhandler
 from django.utils.datastructures import MultiValueDict
 from django.core.mail import EmailMessage
-from mailserver.exceptions import *
 
 
 class EmailRequest(object):

@@ -32,10 +32,8 @@ class TestResolver(TestCase):
     def test_404(self):
         self.message.replace_header('Envelope-To', 'johndoe@example.org')
         em = EmailRequest(message=self.message)
-        try:
-            response = self.client.request(em)
-        except RecipientNotFound, e:
-            self.assertEquals(e.status_code, 551)
+        response = self.client.request(em)
+        self.assertEquals('recipient_notfound.txt', response.template.name)
 
     def request_one(self, to):
         self.message.replace_header('Envelope-To', to)
@@ -47,7 +45,6 @@ class TestResolver(TestCase):
         response = self.request_one('manolo@bugs.example.com')
         self.assertEquals(response.context['request']['Envelope-To'][1], 'manolo@bugs.example.com')
         self.assertEquals(response.context['sender'], 'manolo')
-        
 
 
 class TestHandler(TestCase):
@@ -85,10 +82,7 @@ class TestAuthentication(TestCase):
     def test_registered(self):
         self.message.replace_header('From', 'bob@example.com')
         request = EmailRequest(message=self.message)
-        try:
-            response = self.client.request(request)
-        except RecipientNotFound:
-            pass
+        response = self.client.request(request)
         user = response.context['user']
         self.assertEquals(False, user.is_anonymous())
         self.assertEquals(user, self.user)
