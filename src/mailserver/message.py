@@ -60,6 +60,8 @@ class EmailRequest(object):
     
     def get_recipient_address(self):
         return self.get_recipient()[1]
+    
+    get_full_path = get_recipient_address
 
     def get_recipient_display(self):
         rec = self.recipient
