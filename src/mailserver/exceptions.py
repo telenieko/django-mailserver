@@ -58,3 +58,14 @@ class RecipientNotFound(PermanentDeliveryError):
 class ContentNotFound(DeliveryError):
     pass
 
+
+from django.core import exceptions
+from django import http
+class ExceptionMapperMiddleware(object):
+    """ Middleware class that captures a Django standard
+        Exception, and raises the "Mail" equivalent.
+        i.e: Http404 > RecipientNotFound
+    """
+    def process_exception(self, request, e):
+        if issubclass(e.__class__, http.Http404):
+            raise RecipientNotFound(e.message)

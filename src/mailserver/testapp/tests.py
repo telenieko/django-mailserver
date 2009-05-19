@@ -39,6 +39,7 @@ class TestMiddleware(object):
     def process_exception(self, request, e):
         request.middlewares['exception'] = True
 
+
 class TestResolver(TestCase):
     def setUp(self):
         self.message = message_from_string(MAIL)
@@ -96,6 +97,7 @@ class TestRequest(TestCase):
         self.assertRaises(DeliveryError, client.request, request)
         self.assertEquals(True, request.middlewares['exception'])
         settings.MAIL_MIDDLEWARE = current_middleware
+
 
 class TestAuthentication(TestCase):
     def setUp(self):

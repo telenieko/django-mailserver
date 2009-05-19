@@ -8,6 +8,7 @@ DEFAULT_SETTINGS = {
         'mailserver.context.i18n',
         ),
     'MAIL_MIDDLEWARE': (
+        'mailserver.exceptions.ExceptionMapperMiddleware',
         'django.middleware.transaction.TransactionMiddleware',
         'mailserver.auth.AuthenticationMiddleware',
     ),
