@@ -18,6 +18,9 @@ class BaseMessageHandler(object):
                 self.load_middleware()
             self.initLock.release()
         resp = self.get_response(request)
+        # Apply response middleware
+        for middleware_method in self._response_middleware:
+            resp = middleware_method(request, resp)
         # Need to handle when the reply is to be sent
         # Or needs to not mark-as-delivered
         if isinstance(resp, EmailIgnoreResponse):
