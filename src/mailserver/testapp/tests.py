@@ -24,6 +24,21 @@ Prueba desde GMail en texto llano.
 
 """
 
+class TestMiddleware(object):
+    def process_request(self, request):
+        request.middlewares = {}
+        request.middlewares['request'] = True
+
+    def process_view(self, request, callback, args, kwargs):
+        request.middlewares['view'] = True
+
+    def process_response(self, request, response):
+        request.middlewares['response'] = True
+        return response
+
+    def process_exception(self, request, e):
+        request.middlewares['exception'] = True
+
 class TestResolver(TestCase):
     def setUp(self):
         self.message = message_from_string(MAIL)
@@ -61,6 +76,27 @@ class TestRequest(TestCase):
         context = RequestContext(request)
         assert context['request'] == request
 
+    def test_req_middleware(self):
+        current_middleware = get_setting('MAIL_MIDDLEWARE')
+        settings.MAIL_MIDDLEWARE = current_middleware + ('testapp.tests.TestMiddleware', )
+        request = EmailRequest(message=self.message)
+        client = Client()
+        response = client.request(request)
+        self.assertEquals(True, request.middlewares['request'])
+        self.assertEquals(True, request.middlewares['view'])
+        self.assertEquals(True, request.middlewares['response'])
+        settings.MAIL_MIDDLEWARE = current_middleware
+
+    def test_exc_middleware(self):
+        self.message.replace_header('Envelope-To', 'except@example.com')
+        current_middleware = get_setting('MAIL_MIDDLEWARE')
+        settings.MAIL_MIDDLEWARE = current_middleware + ('testapp.tests.TestMiddleware', )
+        request = EmailRequest(message=self.message)
+        client = Client()
+        self.assertRaises(DeliveryError, client.request, request)
+        self.assertEquals(True, request.middlewares['exception'])
+        settings.MAIL_MIDDLEWARE = current_middleware
+
 class TestAuthentication(TestCase):
     def setUp(self):
         self.message = message_from_string(MAIL)
@@ -97,10 +133,3 @@ class TestAuthentication(TestCase):
         response = self.client.request(request)
         self.assertEquals('Echo Echo', response.subject)
 
-
-        
-        
-        
-        
-        
-        

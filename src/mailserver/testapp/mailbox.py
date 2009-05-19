@@ -11,6 +11,7 @@ sys.modules.setdefault('testapp2.mailbox', testappboxes)
 testpatterns = patterns('',
   (r'^destination$', 'testapp.mailers.echo'),
   (r'^login$', 'testapp.mailers.login_echo'),
+  (r'^except$', 'testapp.mailers.raise_exception'),
   )
 testappboxes.urlpatterns = testpatterns
 

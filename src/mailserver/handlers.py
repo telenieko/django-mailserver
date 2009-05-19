@@ -126,6 +126,7 @@ class BaseMessageHandler(object):
                 if response is not None:
                     return response
             self.handle_uncaught_exception(request, resolver, exc_info)
+            raise DeliveryError("Unhandled temporary error")
         return response
             
     def handle_uncaught_exception(self, request, resolver, exc_info):

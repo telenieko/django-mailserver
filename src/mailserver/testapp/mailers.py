@@ -15,4 +15,7 @@ def echo(request, sender=None, domain=None):
         subject="Echo Echo")
     return resp
 
+def raise_exception(request):
+    raise ValueError("I am an Exception")
+
 login_echo = login_required(echo)
