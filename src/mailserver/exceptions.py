@@ -14,7 +14,7 @@ class DeliveryError(Exception):
 
     def get_context(self, request):
         return {'recipient': mark_safe(request.get_recipient_display()),
-            'message': request}
+            'message': self.message}
 
     def get_response(self, request):
         # Helper method to provide nice responses for errors.
@@ -44,7 +44,7 @@ class PermanentDeliveryError(DeliveryError):
 class PermissionDenied(PermanentDeliveryError):
     status_code = 530
     template_name = 'recipient_denied.txt'
-    subject = 'Acces Denied to Recipient'
+    subject = 'Access Denied to Recipient'
     
 class RecipientNotFound(PermanentDeliveryError):
     status_code = 511
