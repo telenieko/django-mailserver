@@ -110,7 +110,7 @@ class EmailRequest(object):
         else:
             txtbody = m2decode(msg)
         if not txtbody and not htmlbody:
-            raise ContentNotFound, "No body was present"
+            txtbody = None
         elif htmlbody is not None:
             # TODO: convert htmlbody to TXT.
             raise NotImplementedError("HTML>TXT Conversion not yet ready")
