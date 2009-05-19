@@ -17,7 +17,7 @@ class SMTPServer(smtpd.SMTPServer):
 
     def process_message(self, *args, **kwargs):
         try:
-            real_process_message(self, *args, **kwargs)
+            self.real_process_message(*args, **kwargs)
         except DeliveryError, e:
             return u"%s %s" % (e.status_code, e.message)
 
