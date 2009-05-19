@@ -12,12 +12,12 @@ from mailserver.exceptions import *
 
 MAIL = """From jerry@example.com Wed Oct 22 07:16:19 2008
 Return-path: <tom@example.com>
-Envelope-to: onedest@example.net
+Envelope-to: destination@example.com
 Delivery-date: Wed, 22 Oct 2008 10:07:38 -0400
 Message-ID: <fab82e500810220403n6d294b91g5ab3963a7fcff7cf@mail.gmail.com>
 Date: Wed, 22 Oct 2008 13:03:36 +0200
 From: "John Smith" <john@example.com>
-To: destination@bugs.example.com
+To: to-destination@example.com
 Subject: Prueba GMail plain
 
 Prueba desde GMail en texto llano.
@@ -35,16 +35,13 @@ class TestResolver(TestCase):
         response = self.client.request(em)
         self.assertEquals('recipient_notfound.txt', response.template.name)
 
-    def request_one(self, to):
-        self.message.replace_header('Envelope-To', to)
+    def test_ok(self):
         em = EmailRequest(message=self.message)
         response = self.client.request(em)
-        return response
-
-    def test_ok(self):
-        response = self.request_one('manolo@bugs.example.com')
-        self.assertEquals(response.context['request']['Envelope-To'][1], 'manolo@bugs.example.com')
-        self.assertEquals(response.context['sender'], 'manolo')
+        self.assertEquals(
+            response.context['request'].get_recipient_address(),
+            'destination@example.com')
+        self.assertEquals(response.subject, 'Echo Echo')
 
 
 class TestHandler(TestCase):
@@ -86,6 +83,24 @@ class TestAuthentication(TestCase):
         user = response.context['user']
         self.assertEquals(False, user.is_anonymous())
         self.assertEquals(user, self.user)
+
+    def test_loginrequired_anonymous(self):
+        self.message.replace_header('Envelope-To', 'login@example.com')
+        request = EmailRequest(message=self.message)
+        response = self.client.request(request)
+        self.assertEquals('Access Denied to Recipient', response.subject)
+
+    def test_loginrequired_registered(self):
+        self.message.replace_header('From', 'bob@example.com')
+        self.message.replace_header('Envelope-To', 'login@example.com')
+        request = EmailRequest(message=self.message)
+        response = self.client.request(request)
+        self.assertEquals('Echo Echo', response.subject)
+
+
+        
+        
+        
         
         
         

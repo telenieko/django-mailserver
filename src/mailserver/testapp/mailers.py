@@ -2,6 +2,7 @@ from mailserver import EmailResponse
 from django.template import loader
 from django.utils.safestring import mark_safe
 from mailserver.context import RequestContext
+from mailserver.auth import login_required
 
 def echo(request, sender=None, domain=None):
     t = loader.get_template('recipient_notfound.txt')
@@ -14,3 +15,4 @@ def echo(request, sender=None, domain=None):
         subject="Echo Echo")
     return resp
 
+login_echo = login_required(echo)

@@ -1,5 +1,6 @@
 from django.contrib.auth import backends, load_backend
 from django.contrib.auth.models import User
+from mailserver.exceptions import PermissionDenied
 
 class MailFromBackend(backends.ModelBackend):
     def authenticate(self, request):
@@ -40,3 +41,12 @@ class AuthenticationMiddleware(object):
     def process_request(self, request):
         request.user = get_user(request)
         return None
+
+# Decorators
+def login_required(view):
+    def decorate(request, *args, **kwargs):
+        if request.user.is_anonymous():
+            raise PermissionDenied(
+                "You need to be authenticated to access this resource.")
+        return view(request, *args, **kwargs)
+    return decorate 

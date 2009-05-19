@@ -9,14 +9,12 @@ sys.modules.setdefault('testapp2', testapp)
 sys.modules.setdefault('testapp2.mailbox', testappboxes)
 
 testpatterns = patterns('',
-  (r'^onedest', 'testapp.mailers.echo'),
-  (r'(?P<sender>.+)@(?P<domain>.*)', 'testapp.mailers.echo'),
-  (r'(?P<sender>.+)', 'testapp.mailers.echo'),
+  (r'^destination$', 'testapp.mailers.echo'),
+  (r'^login$', 'testapp.mailers.login_echo'),
   )
 testappboxes.urlpatterns = testpatterns
 
 urlpatterns = patterns('',
-  (r'(\.?)example.net', include('testapp2.mailbox')),
-  (r'@bugs.example.com', include('testapp2.mailbox')),
+  (r'@example.com', include('testapp2.mailbox')),
 )
 
