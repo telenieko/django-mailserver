@@ -6,6 +6,7 @@ from django.core import urlresolvers
 from django.utils.encoding import smart_str
 
 _resolver_cache = {} # Maps mailconf modules to RegexURLResolver instances.
+Resolver404 = urlresolvers.Resolver404
 
 def get_resolver(mailconf):
     if mailconf is None:
