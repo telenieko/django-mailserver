@@ -2,14 +2,22 @@
 from django.http import Http404
 
 class DeliveryError(Exception):
-    status_code = -1
+    # Persistent Transeint Failures start with '4'
+    status_code = 400
 
-class RecipientNotFound(DeliveryError):
-    status_code = 551
-    pass
+class PermanentDeliveryError(DeliveryError):
+    # Permanent Failures start with '5'
+    status_code = 500
+
+class PermissionDenied(PermanentDeliveryError):
+    status_code = 530
+    
+class RecipientNotFound(PermanentDeliveryError):
+    status_code = 511
 
 class MailerDoesNotExist(RecipientNotFound):
     pass
 
 class ContentNotFound(DeliveryError):
     pass
+
