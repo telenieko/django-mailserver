@@ -12,12 +12,31 @@ class BaseMessageHandler(object):
         self._request_middleware = self._view_middleware = self._response_middleware = self._exception_middleware = None
 
     def __call__(self, environ, request):
+        resolver = None
+        try:
+            mailconf = getattr(request, "mailconf", get_setting('ROOT_MAILCONF'))
+            resolver = resolvers.RegexMailResolver(r'', mailconf)
+            response = self.call(resolver, environ, request)
+            return response
+        except SystemExit:
+            raise
+        except:
+            exc_info = sys.exc_info()
+            exc = exc_info[1]
+            if hasattr(exc, 'get_response'):
+                response = exc.get_response(request)
+                if response is not None:
+                    return response
+            self.handle_uncaught_exception(request, resolver, exc_info)
+            raise DeliveryError("Unhandled temporary error")
+
+    def call(self, resolver, environ, request):
         if self._request_middleware is None:
             self.initLock.acquire()
             if self._request_middleware is None:
                 self.load_middleware()
             self.initLock.release()
-        resp = self.get_response(request)
+        resp = self.get_response(resolver, request)
         # Apply response middleware
         for middleware_method in self._response_middleware:
             resp = middleware_method(request, resp)
@@ -79,7 +98,7 @@ class BaseMessageHandler(object):
         # as a flag for initialization being complete.
         self._request_middleware = request_middleware
 
-    def get_response(self, request):
+    def get_response(self, resolver, request):
         from django.core import exceptions
         from mailserver import get_setting
 
@@ -89,51 +108,36 @@ class BaseMessageHandler(object):
             if response:
                 return response
 
-        mailconf = getattr(request, "mailconf", get_setting('ROOT_MAILCONF'))
-        resolver = resolvers.RegexMailResolver(r'', mailconf)
+        callback, callback_args, callback_kwargs = \
+            resolver.resolve(request.get_recipient_address())
+        # Apply view middleware
+        for middleware_method in self._view_middleware:
+            response = middleware_method(request, callback, callback_args, callback_kwargs)
+            if response:
+                return response
+
         try:
-            callback, callback_args, callback_kwargs = \
-                resolver.resolve(request.get_recipient_address())
-            # Apply view middleware
-            for middleware_method in self._view_middleware:
-                response = middleware_method(request, callback, callback_args, callback_kwargs)
+            response = callback(request, *callback_args, **callback_kwargs)
+        except Exception, e:
+            for middleware_method in self._exception_middleware:
+                response = middleware_method(request, e)
                 if response:
                     return response
-
-            try:
-                response = callback(request, *callback_args, **callback_kwargs)
-            except Exception, e:
-                for middleware_method in self._exception_middleware:
-                    response = middleware_method(request, e)
-                    if response:
-                        return response
-                raise
-            # Complain if the view returned None (a common error).
-            if response is None:
-                try:
-                    view_name = callback.func_name
-                except AttributeError:
-                    view_name = callback.__class__.__name__ + '.__call__'
-                raise ValueError, "The view %s.%s didn't return a meaningfull response" % (callback.__module__, view_name)
-            return response
-        except SystemExit:
             raise
-        except:
-            exc_info = sys.exc_info()
-            exc = exc_info[1]
-            if hasattr(exc, 'get_response'):
-                response = exc.get_response(request)
-                if response is not None:
-                    return response
-            self.handle_uncaught_exception(request, resolver, exc_info)
-            raise DeliveryError("Unhandled temporary error")
+        # Complain if the view returned None (a common error).
+        if response is None:
+            try:
+                view_name = callback.func_name
+            except AttributeError:
+                view_name = callback.__class__.__name__ + '.__call__'
+            raise ValueError, "The view %s.%s didn't return a meaningfull response" % (callback.__module__, view_name)
         return response
             
     def handle_uncaught_exception(self, request, resolver, exc_info):
         from django.conf import settings
         from django.core.mail import mail_admins
 
-        if settings.DEBUG_PROPAGATE_EXCEPTIONS:
+        if settings.DEBUG_PROPAGATE_EXCEPTIONS or settings.DEBUG:
             raise
 
         # When DEBUG is False, send an error message to the admins.
