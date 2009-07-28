@@ -17,7 +17,7 @@ class BaseMessageHandler(object):
             mailconf = getattr(request, "mailconf", get_setting('ROOT_MAILCONF'))
             resolver = resolvers.RegexMailResolver(r'', mailconf)
             response = self.call(resolver, environ, request)
-            return response
+            return self.handle_response(response)
         except SystemExit:
             raise
         except:
@@ -26,7 +26,7 @@ class BaseMessageHandler(object):
             if hasattr(exc, 'get_response'):
                 response = exc.get_response(request)
                 if response is not None:
-                    return response
+                    return self.handle_response(response)
             self.handle_uncaught_exception(request, resolver, exc_info)
             raise DeliveryError("Unhandled temporary error")
 
@@ -133,6 +133,11 @@ class BaseMessageHandler(object):
             raise ValueError, "The view %s.%s didn't return a meaningfull response" % (callback.__module__, view_name)
         return response
             
+    def handle_response(self, response):
+        if not issubclass(response.__class__, EmailIgnoreResponse):
+            response.send()
+        return response
+
     def handle_uncaught_exception(self, request, resolver, exc_info):
         from django.conf import settings
         from django.core.mail import mail_admins
